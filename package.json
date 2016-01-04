@@ -1,0 +1,24 @@
+{
+  "name": "visic",
+  "version": "1.0.0",
+  "description": "Visual stats about music",
+  "scripts": {
+    "start": "hs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Delapouite/visic.git"
+  },
+  "author": "Delapouite <delapouite@gmail.com> (http://delapouite.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Delapouite/visic/issues"
+  },
+  "homepage": "https://github.com/Delapouite/visic#readme",
+  "dependencies": {
+    "d3": "^3.5.12"
+  },
+  "devDependencies": {
+    "http-server": "^0.8.5"
+  }
+}

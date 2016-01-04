@@ -1,0 +1,27 @@
+body {
+  background: white;
+  color: #333;
+}
+
+.bar {
+  fill: hotpink;
+}
+
+.bar:hover {
+  fill: brown;
+}
+
+.axis, .label {
+  font: 11px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
