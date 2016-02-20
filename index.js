@@ -2,20 +2,29 @@
 
 var songsP = fetch("dump.json").then(res => res.json()).then(j => j.songs)
 
-var songsByYearP = songsP
-.then(songs => {
+var songsByYearP = songsP.then(songs => {
   var hash = songs.reduce((acc, song) => {
     var d = Number(song.date)
     if (!isNaN(d)) acc[d] = acc[d] ? acc[d] + 1 : 1
-      return acc
+    return acc
   }, {})
 
-  return Object.keys(hash).map(k => ({ year: Number(k), songs: hash[k] }))
+  return Object.keys(hash).map(k => ({ time: Number(k), songs: hash[k] }))
+})
+
+var songsByDecadeP = songsP.then(songs => {
+  var hash = songs.reduce((acc, song) => {
+    var d = Number(String(song.date).slice(0, 3))
+    if (!isNaN(d)) acc[d] = acc[d] ? acc[d] + 1 : 1
+    return acc
+  }, {})
+
+  return Object.keys(hash).map(k => ({ time: String(Number(k)) + '0s', songs: hash[k] }))
 })
 
 // visualizations
 
-var yearsChart = (data) => {
+var timeChart = data => {
   var margin = {top: 20, right: 20, bottom: 30, left: 40},
     width = 1900 - margin.left - margin.right,
     height = 800 - margin.top - margin.bottom
@@ -41,7 +50,7 @@ var yearsChart = (data) => {
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
-  x.domain(data.map(d => d.year))
+  x.domain(data.map(d => d.time))
   y.domain([0, d3.max(data, d => d.songs)])
 
   svg.append("g")
@@ -63,8 +72,8 @@ var yearsChart = (data) => {
     .data(data)
   .enter().append("rect")
     .attr("class", "bar")
-    .attr("title", d => x(d.year))
-    .attr("x", d => x(d.year))
+    .attr("title", d => x(d.time))
+    .attr("x", d => x(d.time))
     .attr("width", x.rangeBand())
     .attr("y", d => y(d.songs))
     .attr("height", d => height - y(d.songs))
@@ -73,11 +82,12 @@ var yearsChart = (data) => {
     .data(data)
   .enter().append("svg:text")
     .attr("class", "label")
-    .attr("x", d => x(d.year))
+    .attr("x", d => x(d.time))
     .attr("y", d => y(d.songs) - 5)
     .text(d => d.songs)
 }
 
 // connect
 
-songsByYearP.then(yearsChart)
+songsByYearP.then(timeChart)
+songsByDecadeP.then(timeChart)
