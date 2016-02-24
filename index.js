@@ -1,26 +1,45 @@
+// utils
+
+var inc = (o, k) => ((o[k] = o[k] ? o[k] + 1 : 1), o)
+
 // data
 
 var songsP = fetch("dump.json").then(res => res.json()).then(j => j.songs)
 
-var songsByYearP = songsP.then(songs => {
-  var hash = songs.reduce((acc, song) => {
-    var d = Number(song.date)
-    if (!isNaN(d)) acc[d] = acc[d] ? acc[d] + 1 : 1
-    return acc
-  }, {})
+var datedSongsP = songsP.then(songs =>
+  songs.map(song => (song.year = Number(song.date), song))
+       .filter(song => !isNaN(song.year))
+       .filter(song => song.artist))
 
+var songsCountByYearP = datedSongsP.then(songs => {
+  var hash = songs.reduce((acc, song) => inc(acc, song.year), {})
   return Object.keys(hash).map(k => ({ time: Number(k), songs: hash[k] }))
 })
 
-var songsByDecadeP = songsP.then(songs => {
+var songsCountByDecadeP = datedSongsP.then(songs => {
+  var hash = songs.reduce((acc, song) => inc(acc, String(song.year).slice(0, 3)), {})
+  return Object.keys(hash).map(k => ({ time: String(Number(k)) + "0s", songs: hash[k] }))
+})
+
+var newArtistsByYearP = datedSongsP.then(songs => {
   var hash = songs.reduce((acc, song) => {
-    var d = Number(String(song.date).slice(0, 3))
-    if (!isNaN(d)) acc[d] = acc[d] ? acc[d] + 1 : 1
+    var a = song.artist.toLowerCase()
+    if (!acc[a] || acc[a] > song.year) acc[a] = song.year
     return acc
   }, {})
 
-  return Object.keys(hash).map(k => ({ time: String(Number(k)) + '0s', songs: hash[k] }))
+  return Object.keys(hash).reduce((acc, artist) => {
+    var year = hash[artist]
+    if (!acc[year]) {
+      acc[year] = [artist]
+    } else {
+      acc[year].push(artist)
+    }
+    return acc
+  }, {})
 })
+
+var newArtistsCountByYearP = newArtistsByYearP.then(d => Object.keys(d).map(k => ({ time: Number(k), songs: d[k].length })))
 
 // visualizations
 
@@ -87,7 +106,15 @@ var timeChart = data => {
     .text(d => d.songs)
 }
 
+var table = data => {
+ var pre = document.createElement('pre')
+ pre.textContent = Object.keys(data).map(k => `${k} ${data[k].join(", ")}\n`)
+ document.body.appendChild(pre)
+}
+
 // connect
 
-songsByYearP.then(timeChart)
-songsByDecadeP.then(timeChart)
+songsCountByYearP.then(timeChart)
+songsCountByDecadeP.then(timeChart)
+newArtistsCountByYearP.then(timeChart)
+newArtistsByYearP.then(table)
