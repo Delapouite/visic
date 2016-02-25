@@ -20,12 +20,12 @@ var datedSongsP = songsP.then(songs =>
 
 var songsCountByYearP = datedSongsP.then(songs => {
   var hash = songs.reduce((acc, song) => inc(acc, song.year), {})
-  return Object.keys(hash).map(k => ({ time: Number(k), songs: hash[k] }))
+  return Object.keys(hash).map(k => ({ time: Number(k), count: hash[k] }))
 })
 
 var songsCountByDecadeP = datedSongsP.then(songs => {
   var hash = songs.reduce((acc, song) => inc(acc, String(song.year).slice(0, 3)), {})
-  return Object.keys(hash).map(k => ({ time: String(Number(k)) + "0s", songs: hash[k] }))
+  return Object.keys(hash).map(k => ({ time: String(Number(k)) + "0s", count: hash[k] }))
 })
 
 var newArtistsByYearP = datedSongsP.then(songs => {
@@ -46,7 +46,7 @@ var newArtistsByYearP = datedSongsP.then(songs => {
   }, {})
 })
 
-var newArtistsCountByYearP = newArtistsByYearP.then(d => Object.keys(d).map(k => ({ time: Number(k), songs: d[k].length })))
+var newArtistsCountByYearP = newArtistsByYearP.then(d => Object.keys(d).map(k => ({ time: Number(k), count: d[k].length })))
 
 // visualizations
 
@@ -77,7 +77,7 @@ var timeChart = data => {
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
   x.domain(data.map(d => d.time))
-  y.domain([0, d3.max(data, d => d.songs)])
+  y.domain([0, d3.max(data, d => d.count)])
 
   svg.append("g")
     .attr("class", "x axis")
@@ -101,16 +101,16 @@ var timeChart = data => {
     .attr("title", d => x(d.time))
     .attr("x", d => x(d.time))
     .attr("width", x.rangeBand())
-    .attr("y", d => y(d.songs))
-    .attr("height", d => height - y(d.songs))
+    .attr("y", d => y(d.count))
+    .attr("height", d => height - y(d.count))
 
   svg.selectAll(".label")
     .data(data)
   .enter().append("svg:text")
     .attr("class", "label")
     .attr("x", d => x(d.time))
-    .attr("y", d => y(d.songs) - 5)
-    .text(d => d.songs)
+    .attr("y", d => y(d.count) - 5)
+    .text(d => d.count)
 }
 
 var table = data => {
