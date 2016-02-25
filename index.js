@@ -2,6 +2,13 @@
 
 var inc = (o, k) => ((o[k] = o[k] ? o[k] + 1 : 1), o)
 
+var getArtist = song => {
+  var a = song.artist.toLowerCase()
+  var m = a.match(/(.*) feat[^h]/)
+  if (m) a = m[1]
+  return a.trim()
+}
+
 // data
 
 var songsP = fetch("dump.json").then(res => res.json()).then(j => j.songs)
@@ -23,7 +30,7 @@ var songsCountByDecadeP = datedSongsP.then(songs => {
 
 var newArtistsByYearP = datedSongsP.then(songs => {
   var hash = songs.reduce((acc, song) => {
-    var a = song.artist.toLowerCase()
+    var a = getArtist(song)
     if (!acc[a] || acc[a] > song.year) acc[a] = song.year
     return acc
   }, {})
