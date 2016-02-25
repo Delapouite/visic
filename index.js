@@ -107,8 +107,11 @@ var timeChart = data => {
 }
 
 var table = data => {
+ var h = document.createElement('h3')
+ h.textContent = Object.keys(data).reduce((acc, k) => acc += data[k].length, 0)
  var pre = document.createElement('pre')
  pre.textContent = Object.keys(data).map(k => `${k} ${data[k].join(", ")}\n`)
+ document.body.appendChild(h)
  document.body.appendChild(pre)
 }
 
