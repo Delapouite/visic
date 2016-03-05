@@ -9,6 +9,10 @@ var getArtist = song => {
   return a.trim()
 }
 
+var getAlbum = song => {
+  return song.album.toLowerCase().trim()
+}
+
 // data
 
 var songsP = fetch("dump.json").then(res => res.json()).then(j => j.songs)
@@ -48,9 +52,36 @@ var newArtistsByYearP = datedSongsP.then(songs => {
 
 var newArtistsCountByYearP = newArtistsByYearP.then(d => Object.keys(d).map(k => ({ time: Number(k), count: d[k].length })))
 
+var albumsByYearP = datedSongsP.then(songs => {
+  var hash = songs.reduce((acc, song) => {
+    acc[getAlbum(song)] = song.year
+    return acc
+  }, {})
+
+  return Object.keys(hash).reduce((acc, album) => {
+    var year = hash[album]
+    if (!acc[year]) {
+      acc[year] = [album]
+    } else {
+      acc[year].push(album)
+    }
+    return acc
+  }, {})
+})
+
+var albumsCountByYearP = albumsByYearP.then(d => Object.keys(d).map(k => ({ time: Number(k), count: d[k].length })))
+
 // visualizations
 
-var timeChart = data => {
+var addTitle = title => {
+  var h = document.createElement('h2')
+  h.textContent = title
+  document.body.appendChild(h)
+}
+
+var timeChart = (title, data) => {
+  addTitle(title)
+
   var margin = {top: 20, right: 20, bottom: 30, left: 40},
     width = 1900 - margin.left - margin.right,
     height = 800 - margin.top - margin.bottom
@@ -107,7 +138,9 @@ var timeChart = data => {
     .text(d => d.count)
 }
 
-var table = data => {
+var table = (title, data) => {
+ addTitle(title)
+
  var h = document.createElement('h3')
  h.textContent = Object.keys(data).reduce((acc, k) => acc += data[k].length, 0)
  var pre = document.createElement('pre')
@@ -118,7 +151,11 @@ var table = data => {
 
 // connect
 
-songsCountByYearP.then(timeChart)
-songsCountByDecadeP.then(timeChart)
-newArtistsCountByYearP.then(timeChart)
-newArtistsByYearP.then(table)
+songsCountByYearP.then((d) => timeChart('Songs per year', d))
+songsCountByDecadeP.then((d) => timeChart('Songs per decade', d))
+
+newArtistsCountByYearP.then((d) => timeChart('New artists per year', d))
+newArtistsByYearP.then((d) => table('New artists per year', d))
+
+albumsCountByYearP.then((d) => timeChart('Albums per year', d))
+albumsByYearP.then((d) => table('Albums per year', d))
