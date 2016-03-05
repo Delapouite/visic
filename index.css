@@ -7,6 +7,10 @@ body {
   fill: hotpink;
 }
 
+.bar:nth-of-type(10n + 3) {
+  fill: pink;
+}
+
 .bar:hover {
   fill: brown;
 }
