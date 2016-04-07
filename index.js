@@ -9,9 +9,7 @@ var getArtist = song => {
   return a.trim()
 }
 
-var getAlbum = song => {
-  return song.album.toLowerCase().trim()
-}
+var getAlbum = song => (song.album || '').toLowerCase().trim()
 
 // data
 
@@ -26,6 +24,12 @@ var songsCountByYearP = datedSongsP.then(songs => {
   var hash = songs.reduce((acc, song) => inc(acc, song.year), {})
   return Object.keys(hash).map(k => ({ time: Number(k), count: hash[k] }))
 })
+
+var songsCountBySortedYearP = songsCountByYearP.then(songsCount =>
+  songsCount.concat([]).sort(({ count: a }, { count: b }) => {
+    if (a === b) return 0
+    return a > b ? 1 : -1
+  }))
 
 var songsCountByDecadeP = datedSongsP.then(songs => {
   var hash = songs.reduce((acc, song) => inc(acc, String(song.year).slice(0, 3)), {})
@@ -67,6 +71,7 @@ var albumsByYearP = datedSongsP.then(songs => {
     }
     return acc
   }, {})
+
 })
 
 var albumsCountByYearP = albumsByYearP.then(d => Object.keys(d).map(k => ({ time: Number(k), count: d[k].length })))
@@ -152,6 +157,7 @@ var table = (title, data) => {
 // connect
 
 songsCountByYearP.then((d) => timeChart('Songs per year', d))
+songsCountBySortedYearP.then((d) => timeChart('Songs per sorted year', d))
 songsCountByDecadeP.then((d) => timeChart('Songs per decade', d))
 
 newArtistsCountByYearP.then((d) => timeChart('New artists per year', d))
