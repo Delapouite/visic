@@ -1,119 +1,139 @@
+/* global d3, R */
+
+(function (R, d3) {
+"use strict"
+
+const {
+  filter,
+  fromPairs,
+  groupBy,
+  length,
+  map,
+  pipe,
+  prop,
+  propOr,
+  reduce,
+  slice,
+  sortBy,
+  toPairs
+} = R
+
 // utils
 
-var inc = (o, k) => ((o[k] = o[k] ? o[k] + 1 : 1), o)
+const debug = console.debug.bind(console)
 
-var getArtist = song => {
-  var a = song.artist.toLowerCase()
-  var m = a.match(/(.*) feat[^h]/)
+const getArtist = song => {
+  let a = song.artist.toLowerCase()
+  const m = a.match(/(.*) feat[^h]/)
   if (m) a = m[1]
   return a.trim()
 }
 
-var getAlbum = song => (song.album || '').toLowerCase().trim()
+const getAlbum = pipe(propOr("", "album"), R.toLower, R.trim)
 
-// data
+const formatXY = (o, xFmt = Number, yFmt = R.identity) =>
+  toPairs(o).map(([k, v]) => ({ x: xFmt(k), y: yFmt(v) }))
 
-var songsP = fetch("dump.json").then(res => res.json()).then(j => j.songs)
+const reduceConcat = pipe(
+  toPairs,
+  reduce(
+    (a, [k, v]) => R.assoc(v, (a[v] || []).concat(k), a)
+  , {})
+)
 
-var datedSongsP = songsP.then(songs =>
-  songs.map(song => (song.year = Number(song.date), song))
-       .filter(song => !isNaN(song.year))
-       .filter(song => song.artist))
+// raw data
 
-var songsCountByYearP = datedSongsP.then(songs => {
-  var hash = songs.reduce((acc, song) => inc(acc, song.year), {})
-  return Object.keys(hash).map(k => ({ time: Number(k), count: hash[k] }))
-})
+// Promise<Array>
+const songsP = fetch("dump.json").then(res => res.json()).then(prop("songs"))
 
-var songsCountBySortedYearP = songsCountByYearP.then(songsCount =>
-  songsCount.concat([]).sort(({ count: a }, { count: b }) => {
-    if (a === b) return 0
-    return a > b ? 1 : -1
-  }))
+// Promise<Array>
+const datedSongsP = songsP.then(pipe(
+  map(s => (s.year = Number(s.date), s)),
+  filter(s => !isNaN(s.year) && s.artist)
+))
 
-var songsCountByDecadeP = datedSongsP.then(songs => {
-  var hash = songs.reduce((acc, song) => inc(acc, String(song.year).slice(0, 3)), {})
-  return Object.keys(hash).map(k => ({ time: String(Number(k)) + "0s", count: hash[k] }))
-})
+// Promise<POJO>
+const songsByYearP = datedSongsP.then(pipe(
+  groupBy(prop("year")),
+  map(length)
+))
 
-var newArtistsByYearP = datedSongsP.then(songs => {
-  var hash = songs.reduce((acc, song) => {
+// Promise<POJO>
+const songsBySortedYearP = songsByYearP.then(pipe(
+  toPairs,
+  sortBy(prop(1)),
+  fromPairs
+))
+
+// Promise<POJO>
+const songsByDecadeP = datedSongsP.then(pipe(
+  groupBy(pipe(
+    prop("date"),
+    slice(0, 3)
+  )),
+  map(length)
+))
+
+// Promise<POJO>
+const newArtistsByYearP = datedSongsP.then(
+  reduce((acc, song) => {
     var a = getArtist(song)
     if (!acc[a] || acc[a] > song.year) acc[a] = song.year
     return acc
   }, {})
+).then(reduceConcat)
 
-  return Object.keys(hash).reduce((acc, artist) => {
-    var year = hash[artist]
-    if (!acc[year]) {
-      acc[year] = [artist]
-    } else {
-      acc[year].push(artist)
-    }
-    return acc
-  }, {})
-})
+// Promise<POJO>
+const albumsByYearP = datedSongsP
+.then(reduce((a, s) => (a[getAlbum(s)] = s.year, a), {}))
+.then(reduceConcat)
 
-var newArtistsCountByYearP = newArtistsByYearP.then(d => Object.keys(d).map(k => ({ time: Number(k), count: d[k].length })))
+// XY chart data
 
-var albumsByYearP = datedSongsP.then(songs => {
-  var hash = songs.reduce((acc, song) => {
-    acc[getAlbum(song)] = song.year
-    return acc
-  }, {})
+const songsByYearXYP = songsByYearP.then(formatXY)
+const songsBySortedYearXYP = songsBySortedYearP.then(formatXY)
+const songsByDecadeXYP = songsByDecadeP.then(hash => formatXY(hash, k => String(Number(k)) + "0s"))
 
-  return Object.keys(hash).reduce((acc, album) => {
-    var year = hash[album]
-    if (!acc[year]) {
-      acc[year] = [album]
-    } else {
-      acc[year].push(album)
-    }
-    return acc
-  }, {})
+const newArtistsByYearXYP = newArtistsByYearP.then(d => formatXY(d, Number, length))
 
-})
-
-var albumsCountByYearP = albumsByYearP.then(d => Object.keys(d).map(k => ({ time: Number(k), count: d[k].length })))
+const albumsByYearXYP = albumsByYearP.then(d => formatXY(d, Number, length))
 
 // visualizations
 
-var addTitle = title => {
-  var h = document.createElement('h2')
+const addTitle = title => {
+  const h = document.createElement("h2")
   h.textContent = title
   document.body.appendChild(h)
 }
 
-var timeChart = (title, data) => {
+const timeChart = R.curry((title, data) => {
   addTitle(title)
 
-  var margin = {top: 20, right: 20, bottom: 30, left: 40},
+  const margin = {top: 20, right: 20, bottom: 30, left: 40},
     width = 1900 - margin.left - margin.right,
     height = 800 - margin.top - margin.bottom
 
-  var x = d3.scale.ordinal()
+  const x = d3.scale.ordinal()
     .rangeRoundBands([0, width], .1)
+    .domain(data.map(d => d.x))
 
-  var y = d3.scale.linear()
+  const y = d3.scale.linear()
     .range([height, 0])
+    .domain([0, d3.max(data, d => d.y)])
 
-  var xAxis = d3.svg.axis()
+  const xAxis = d3.svg.axis()
     .scale(x)
-    .orient("bottom")
 
-  var yAxis = d3.svg.axis()
+  const yAxis = d3.svg.axis()
     .scale(y)
     .orient("left")
     .ticks(20)
 
-  var svg = d3.select("body").append("svg")
+  const svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-
-  x.domain(data.map(d => d.time))
-  y.domain([0, d3.max(data, d => d.count)])
 
   svg.append("g")
     .attr("class", "x axis")
@@ -128,40 +148,42 @@ var timeChart = (title, data) => {
     .data(data)
   .enter().append("rect")
     .attr("class", "bar")
-    .attr("title", d => x(d.time))
-    .attr("x", d => x(d.time))
+    .attr("title", d => x(d.x))
+    .attr("x", d => x(d.x))
     .attr("width", x.rangeBand())
-    .attr("y", d => y(d.count))
-    .attr("height", d => height - y(d.count))
+    .attr("y", d => y(d.y))
+    .attr("height", d => height - y(d.y))
 
   svg.selectAll(".label")
     .data(data)
   .enter().append("svg:text")
     .attr("class", "label")
-    .attr("x", d => x(d.time))
-    .attr("y", d => y(d.count) - 5)
-    .text(d => d.count)
-}
+    .attr("x", d => x(d.x))
+    .attr("y", d => y(d.y) - 5)
+    .text(d => d.y)
+})
 
-var table = (title, data) => {
+const table = R.curry((title, data) => {
  addTitle(title)
 
- var h = document.createElement('h3')
- h.textContent = Object.keys(data).reduce((acc, k) => acc += data[k].length, 0)
- var pre = document.createElement('pre')
- pre.textContent = Object.keys(data).map(k => `${k} ${data[k].join(", ")}\n`)
+ const h = document.createElement("h3")
+ h.textContent = R.values(data).reduce((acc, v) => acc += v.length, 0)
+ const pre = document.createElement("pre")
+ pre.textContent = toPairs(data).map(([k, v]) => `${k} ${v.join(", ")}\n`)
  document.body.appendChild(h)
  document.body.appendChild(pre)
-}
+})
 
 // connect
 
-songsCountByYearP.then((d) => timeChart('Songs per year', d))
-songsCountBySortedYearP.then((d) => timeChart('Songs per sorted year', d))
-songsCountByDecadeP.then((d) => timeChart('Songs per decade', d))
+songsByYearXYP.then(timeChart("Songs per year"))
+songsBySortedYearXYP.then(timeChart("Songs per sorted year"))
+songsByDecadeXYP.then(timeChart("Songs per decade"))
 
-newArtistsCountByYearP.then((d) => timeChart('New artists per year', d))
-newArtistsByYearP.then((d) => table('New artists per year', d))
+newArtistsByYearXYP.then(timeChart("New artists per year"))
+newArtistsByYearP.then(table("New artists per year"))
 
-albumsCountByYearP.then((d) => timeChart('Albums per year', d))
-albumsByYearP.then((d) => table('Albums per year', d))
+albumsByYearXYP.then(timeChart("Albums per year"))
+albumsByYearP.then(table("Albums per year"))
+
+}(R, d3))

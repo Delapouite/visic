@@ -16,9 +16,10 @@
   },
   "homepage": "https://github.com/Delapouite/visic#readme",
   "dependencies": {
-    "d3": "^3.5.12"
+    "d3": "^3.5.12",
+    "ramda": "^0.21.0"
   },
   "devDependencies": {
-    "http-server": "^0.8.5"
+    "http-server": "^0.9.0"
   }
 }
