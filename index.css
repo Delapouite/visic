@@ -5,6 +5,7 @@ body {
 }
 
 nav {
+  background: rgba(255, 255, 255, 0.8);
   box-sizing: border-box;
   padding: 0 .5em;
   position: fixed;
@@ -14,14 +15,6 @@ nav {
 
 nav a {
   padding: 0 .5em;
-}
-
-.bar {
-  fill: hotpink;
-}
-
-.bar:nth-of-type(10n + 3) {
-  fill: pink;
 }
 
 .bar:hover {

@@ -3,6 +3,16 @@
 (function (R, d3) {
 "use strict"
 
+const palette = {
+  195: "#feb2dd",
+  196: "#feb2dd",
+  197: "#e271b1",
+  198: "#c6478f",
+  199: "#a4286e",
+  200: "#721148",
+  201: "#3a0222"
+}
+
 const {
   assoc,
   curry,
@@ -179,6 +189,7 @@ const timeChart = curry((title, data) => {
     .attr("width", x.rangeBand())
     .attr("y", d => y(d.y))
     .attr("height", d => height - y(d.y))
+    .attr("fill", d => palette[String(d.x).slice(0, 3)])
 
   svg.selectAll(".label")
     .data(data)
