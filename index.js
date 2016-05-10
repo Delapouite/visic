@@ -15,6 +15,7 @@ const {
   prop,
   propOr,
   reduce,
+  replace,
   slice,
   sortBy,
   toLower,
@@ -46,6 +47,11 @@ const reduceConcat = pipe(
   reduce(
     (a, [k, v]) => assoc(v, (a[v] || []).concat(k), a)
   , {})
+)
+
+const kebabCase = pipe(
+  toLower,
+  replace(/\s/g, '-')
 )
 
 // raw data
@@ -106,10 +112,24 @@ const albumsByYearXYP = albumsByYearP.then(d => formatXY(d, Number, length))
 
 // visualizations
 
+const addMenu = () => {
+  const nav = document.createElement("nav")
+  document.body.appendChild(nav)
+}
+
 const addTitle = title => {
+  const id = kebabCase(title)
   const h = document.createElement("h2")
   h.textContent = title
+  h.id = id
   document.body.appendChild(h)
+
+  const a = document.createElement("a")
+  a.textContent = title
+  a.href = `#${id}`
+
+  const nav = document.querySelector("nav")
+  nav.appendChild(a)
 }
 
 const timeChart = curry((title, data) => {
@@ -179,6 +199,10 @@ const table = curry((title, data) => {
  document.body.appendChild(h)
  document.body.appendChild(pre)
 })
+
+// layout
+
+addMenu()
 
 // connect
 

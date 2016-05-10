@@ -4,6 +4,18 @@ body {
   font-family: Verdana, Arial, sans-serif;
 }
 
+nav {
+  box-sizing: border-box;
+  padding: 0 .5em;
+  position: fixed;
+  text-align: right;
+  width: 100%;
+}
+
+nav a {
+  padding: 0 .5em;
+}
+
 .bar {
   fill: hotpink;
 }
