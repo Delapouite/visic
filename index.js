@@ -4,9 +4,11 @@
 "use strict"
 
 const {
+  assoc,
+  curry,
   filter,
-  fromPairs,
   groupBy,
+  identity,
   length,
   map,
   pipe,
@@ -15,12 +17,15 @@ const {
   reduce,
   slice,
   sortBy,
-  toPairs
+  toLower,
+  toPairs,
+  trim,
+  values
 } = R
 
 // utils
 
-const debug = console.debug.bind(console)
+// const debug = console.debug.bind(console)
 
 const getArtist = song => {
   let a = song.artist.toLowerCase()
@@ -29,15 +34,17 @@ const getArtist = song => {
   return a.trim()
 }
 
-const getAlbum = pipe(propOr("", "album"), R.toLower, R.trim)
+const getAlbum = pipe(propOr("", "album"), toLower, trim)
 
-const formatXY = (o, xFmt = Number, yFmt = R.identity) =>
-  toPairs(o).map(([k, v]) => ({ x: xFmt(k), y: yFmt(v) }))
+const formatXY = (o, xFmt = Number, yFmt = identity) => {
+  const a = Array.isArray(o) ? o : toPairs(o)
+  return a.map(([k, v]) => ({ x: xFmt(k), y: yFmt(v) }))
+}
 
 const reduceConcat = pipe(
   toPairs,
   reduce(
-    (a, [k, v]) => R.assoc(v, (a[v] || []).concat(k), a)
+    (a, [k, v]) => assoc(v, (a[v] || []).concat(k), a)
   , {})
 )
 
@@ -61,8 +68,7 @@ const songsByYearP = datedSongsP.then(pipe(
 // Promise<POJO>
 const songsBySortedYearP = songsByYearP.then(pipe(
   toPairs,
-  sortBy(prop(1)),
-  fromPairs
+  sortBy(prop(1))
 ))
 
 // Promise<POJO>
@@ -92,7 +98,7 @@ const albumsByYearP = datedSongsP
 
 const songsByYearXYP = songsByYearP.then(formatXY)
 const songsBySortedYearXYP = songsBySortedYearP.then(formatXY)
-const songsByDecadeXYP = songsByDecadeP.then(hash => formatXY(hash, k => String(Number(k)) + "0s"))
+const songsByDecadeXYP = songsByDecadeP.then(d => formatXY(d, k => String(Number(k)) + "0s"))
 
 const newArtistsByYearXYP = newArtistsByYearP.then(d => formatXY(d, Number, length))
 
@@ -106,7 +112,7 @@ const addTitle = title => {
   document.body.appendChild(h)
 }
 
-const timeChart = R.curry((title, data) => {
+const timeChart = curry((title, data) => {
   addTitle(title)
 
   const margin = {top: 20, right: 20, bottom: 30, left: 40},
@@ -163,11 +169,11 @@ const timeChart = R.curry((title, data) => {
     .text(d => d.y)
 })
 
-const table = R.curry((title, data) => {
+const table = curry((title, data) => {
  addTitle(title)
 
  const h = document.createElement("h3")
- h.textContent = R.values(data).reduce((acc, v) => acc += v.length, 0)
+ h.textContent = values(data).reduce((acc, v) => acc += v.length, 0)
  const pre = document.createElement("pre")
  pre.textContent = toPairs(data).map(([k, v]) => `${k} ${v.join(", ")}\n`)
  document.body.appendChild(h)
