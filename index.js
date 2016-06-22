@@ -64,6 +64,10 @@ const kebabCase = pipe(
   replace(/\s/g, '-')
 )
 
+const byYear = pipe(groupBy(prop("year")), map(length))
+
+const bySortedYear = pipe(toPairs, sortBy(prop(1)))
+
 // raw data
 
 // Promise<Array>
@@ -76,16 +80,10 @@ const datedSongsP = songsP.then(pipe(
 ))
 
 // Promise<POJO>
-const songsByYearP = datedSongsP.then(pipe(
-  groupBy(prop("year")),
-  map(length)
-))
+const songsByYearP = datedSongsP.then(byYear)
 
 // Promise<POJO>
-const songsBySortedYearP = songsByYearP.then(pipe(
-  toPairs,
-  sortBy(prop(1))
-))
+const songsBySortedYearP = songsByYearP.then(bySortedYear)
 
 // Promise<POJO>
 const songsByDecadeP = datedSongsP.then(pipe(
@@ -110,6 +108,16 @@ const albumsByYearP = datedSongsP
 .then(reduce((a, s) => (a[getAlbum(s)] = s.year, a), {}))
 .then(reduceConcat)
 
+// Promise<Array>
+const singlesP = datedSongsP.then(pipe(
+  filter(s => getAlbum(s) === 'singles')
+))
+
+const singlesByYearP = singlesP.then(byYear)
+
+const singlesBySortedYearP = singlesByYearP.then(bySortedYear)
+
+
 // XY chart data
 
 const songsByYearXYP = songsByYearP.then(formatXY)
@@ -119,6 +127,9 @@ const songsByDecadeXYP = songsByDecadeP.then(d => formatXY(d, k => String(Number
 const newArtistsByYearXYP = newArtistsByYearP.then(d => formatXY(d, Number, length))
 
 const albumsByYearXYP = albumsByYearP.then(d => formatXY(d, Number, length))
+
+const singlesByYearXYP = singlesByYearP.then(formatXY)
+const singlesBySortedYearXYP = singlesBySortedYearP.then(formatXY)
 
 // visualizations
 
@@ -226,5 +237,8 @@ newArtistsByYearP.then(table("New artists per year"))
 
 albumsByYearXYP.then(timeChart("Albums per year"))
 albumsByYearP.then(table("Albums per year"))
+
+singlesByYearXYP.then(timeChart("Singles per year"))
+singlesBySortedYearXYP.then(timeChart("Singles per sorted year"))
 
 }(R, d3))
