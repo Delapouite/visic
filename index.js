@@ -115,7 +115,6 @@ const singlesByYearP = singlesP.then(byYear)
 
 const singlesBySortedYearP = singlesByYearP.then(bySortedYear)
 
-
 // XY chart data
 
 const songsByYearXYP = songsByYearP.then(formatXY)
@@ -131,8 +130,12 @@ const singlesBySortedYearXYP = singlesBySortedYearP.then(formatXY)
 
 // visualizations
 
-const addMenu = () => {
+const addMenu = (songs) => {
   const nav = document.createElement("nav")
+  const strong = document.createElement("strong")
+  strong.textContent = `${songs.length} songs`
+
+  nav.appendChild(strong)
   document.body.appendChild(nav)
 }
 
@@ -222,7 +225,7 @@ const table = curry((title, data) => {
 
 // layout
 
-addMenu()
+songsP.then((songs) => addMenu(songs))
 
 // connect
 
