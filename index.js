@@ -36,8 +36,6 @@ const {
 
 // utils
 
-// const debug = console.debug.bind(console)
-
 const getArtist = song => {
   let a = song.artist.toLowerCase()
   const m = a.match(/(.*) feat[^h]/)
