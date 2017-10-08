@@ -160,20 +160,20 @@ const timeChart = curry((title, data) => {
     width = 1900 - margin.left - margin.right,
     height = 800 - margin.top - margin.bottom
 
-  const x = d3.scale.ordinal()
-    .rangeRoundBands([0, width], .1)
+  const x = d3.scaleBand()
+    .range([0, width], .1)
     .domain(data.map(d => d.x))
+    .padding(0.1)
 
-  const y = d3.scale.linear()
+  const y = d3.scaleLinear()
     .range([height, 0])
     .domain([0, d3.max(data, d => d.y)])
 
-  const xAxis = d3.svg.axis()
+  const xAxis = d3.axisBottom()
     .scale(x)
 
-  const yAxis = d3.svg.axis()
+  const yAxis = d3.axisLeft()
     .scale(y)
-    .orient("left")
     .ticks(20)
 
   const svg = d3.select("body").append("svg")
@@ -197,7 +197,7 @@ const timeChart = curry((title, data) => {
     .attr("class", "bar")
     .attr("title", d => x(d.x))
     .attr("x", d => x(d.x))
-    .attr("width", x.rangeBand())
+    .attr("width", x.bandwidth())
     .attr("y", d => y(d.y))
     .attr("height", d => height - y(d.y))
     .attr("fill", d => palette[String(d.x).slice(0, 3)])
