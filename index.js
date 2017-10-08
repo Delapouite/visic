@@ -31,7 +31,6 @@ const {
   toLower,
   toPairs,
   trim,
-  values
 } = R
 
 // utils
@@ -216,7 +215,7 @@ const table = curry((title, data) => {
  addTitle(title)
 
  const h = document.createElement("h3")
- h.textContent = values(data).reduce((acc, v) => acc += v.length, 0)
+ h.textContent = Object.values(data).reduce((acc, v) => acc += v.length, 0)
  const pre = document.createElement("pre")
  pre.textContent = toPairs(data).map(([k, v]) => `${k} ${v.join(", ")}\n`)
  document.body.appendChild(h)
