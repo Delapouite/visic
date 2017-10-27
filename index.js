@@ -1,18 +1,6 @@
 /* global d3, R */
 
-(function (R, d3) {
-"use strict"
-
-const palette = {
-  195: "#feb2dd",
-  196: "#feb2dd",
-  197: "#e271b1",
-  198: "#c6478f",
-  199: "#a4286e",
-  200: "#721148",
-  201: "#3a0222"
-}
-
+// can't use ramda es modules in browser yet :(
 const {
   assoc,
   curry,
@@ -33,6 +21,15 @@ const {
   trim,
 } = R
 
+const palette = {
+  195: "#feb2dd",
+  196: "#feb2dd",
+  197: "#e271b1",
+  198: "#c6478f",
+  199: "#a4286e",
+  200: "#721148",
+  201: "#3a0222"
+}
 // utils
 
 const getArtist = song => {
@@ -240,5 +237,3 @@ albumsByYearP.then(table("Albums per year"))
 
 singlesByYearXYP.then(timeChart("Singles per year"))
 singlesBySortedYearXYP.then(timeChart("Singles per sorted year"))
-
-}(R, d3))
