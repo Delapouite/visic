@@ -208,6 +208,44 @@ const timeChart = curry((title, data) => {
     .text(d => d.y)
 })
 
+const pieChart = curry((title, data) => {
+  addTitle(title)
+
+  const width = 500
+  const height = 500
+  const svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+  const radius = Math.min(width, height) / 2
+  const g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+
+	const pie = d3.pie()
+    .sort(null)
+    .value(d => d.y)
+
+  const path = d3.arc()
+    .outerRadius(radius - 10)
+    .innerRadius(0)
+
+  const label = d3.arc()
+    .outerRadius(radius - 40)
+    .innerRadius(radius - 40)
+
+  const arc = g.selectAll(".arc")
+    .data(pie(data))
+    .enter().append("g")
+      .attr("class", "arc")
+
+  arc.append("path")
+    .attr("d", path)
+    .attr("fill", d => palette[String(d.data.x).slice(0, 3)])
+
+  arc.append("text")
+    .attr("transform", d => "translate(" + label.centroid(d) + ")")
+    .attr("dy", "0.35em")
+    .text(d => d.data.x)
+})
+
 const table = curry((title, data) => {
  addTitle(title)
 
@@ -221,13 +259,14 @@ const table = curry((title, data) => {
 
 // layout
 
-songsP.then((songs) => addMenu(songs))
+songsP.then(addMenu)
 
 // connect
 
 songsByYearXYP.then(timeChart("Songs per year"))
 songsBySortedYearXYP.then(timeChart("Songs per sorted year"))
 songsByDecadeXYP.then(timeChart("Songs per decade"))
+songsByDecadeXYP.then(pieChart("Songs per decade (pie)"))
 
 newArtistsByYearXYP.then(timeChart("New artists per year"))
 newArtistsByYearP.then(table("New artists per year"))
