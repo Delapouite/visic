@@ -36,7 +36,7 @@ const getArtist = song => {
   let a = song.artist.toLowerCase()
   const m = a.match(/(.*) feat[^h]/)
   if (m) a = m[1]
-  return a.trim()
+  return a.replace(',', ' -').trim()
 }
 
 const getAlbum = pipe(propOr("", "album"), toLower, trim)
@@ -252,7 +252,7 @@ const table = curry((title, data) => {
  const h = document.createElement("h3")
  h.textContent = Object.values(data).reduce((acc, v) => acc += v.length, 0)
  const pre = document.createElement("pre")
- pre.textContent = toPairs(data).map(([k, v]) => `${k} ${v.join(", ")}\n`)
+ pre.textContent = toPairs(data).map(([k, v]) => `${k} (${v.length}) ${v.sort().join(", ")}\n`).join('')
  document.body.appendChild(h)
  document.body.appendChild(pre)
 })
