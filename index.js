@@ -270,10 +270,10 @@ songsByDecadeXYP.then(timeChart("Songs per decade"))
 songsByDecadeXYP.then(pieChart("Songs per decade (pie)"))
 
 newArtistsByYearXYP.then(timeChart("New artists per year"))
-newArtistsByYearP.then(table("New artists per year"))
+newArtistsByYearP.then(table("New artists per year (list)"))
 
 albumsByYearXYP.then(timeChart("Albums per year"))
-albumsByYearP.then(table("Albums per year"))
+albumsByYearP.then(table("Albums per year (list)"))
 
 singlesByYearXYP.then(timeChart("Singles per year"))
 singlesBySortedYearXYP.then(timeChart("Singles per sorted year"))
