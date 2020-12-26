@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Visual stats about music",
   "scripts": {
-    "start": "hs"
+    "start": "serve"
   },
   "repository": {
     "type": "git",
@@ -20,6 +20,6 @@
     "ramda": "^0.25.0"
   },
   "devDependencies": {
-    "http-server": "^0.10.0"
+    "serve": "^11.3.2"
   }
 }
