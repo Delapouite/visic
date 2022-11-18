@@ -20,6 +20,6 @@
     "ramda": "^0.25.0"
   },
   "devDependencies": {
-    "serve": "^13.0.2"
+    "serve": "^14.1.2"
   }
 }
